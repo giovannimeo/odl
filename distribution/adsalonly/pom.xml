@@ -13,12 +13,10 @@
     <groupId>io.github.giovannimeo</groupId>
     <artifactId>parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <!-- Force the download from the nexus with an empty relative path -->
     <relativePath>../../parent</relativePath>
   </parent>
 
   <artifactId>distribution.adsalonly</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <dependencies>
