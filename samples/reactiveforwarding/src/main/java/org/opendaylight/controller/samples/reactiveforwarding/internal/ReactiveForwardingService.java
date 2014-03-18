@@ -70,6 +70,16 @@ public class ReactiveForwardingService implements IListenDataPacket {
     private String containerName = null;
 
     /*
+     * Count the number of policies installed
+     */
+    private Integer counter = 0;
+
+    /*
+     *  List of the entries installed, so we can cleanup on stop
+     */
+    private List<FlowEntry> entriesInstalled;
+
+    /*
      * Set/unset methods for the service instance that load balancer
      * service requires
      */
@@ -199,6 +209,7 @@ public class ReactiveForwardingService implements IListenDataPacket {
             this.containerName = "";
         }
         //lbsLogger.info(configManager.toString());
+        this.entriesInstalled = new ArrayList<FlowEntry>();
     }
 
     /**
@@ -226,14 +237,17 @@ public class ReactiveForwardingService implements IListenDataPacket {
      *
      */
     void stop() {
+        if (this.entriesInstalled != null) {
+            for (FlowEntry e : this.entriesInstalled) {
+                this.ruleManager.uninstallFlowEntry(e);
+            }
+        }
+        this.entriesInstalled = null;
     }
 
 
-    private boolean installDummyFlowForCBench(Node originatorSwitch, InetAddress srcIp, InetAddress dstIp, byte[] srcMac, byte[] dstMac){
-
-
-
-
+    private boolean installDummyFlowForCBench(Node originatorSwitch, InetAddress srcIp,
+                                              InetAddress dstIp, byte[] srcMac, byte[] dstMac) {
         Match match = new Match();
         List<Action> actions = new ArrayList<Action>();
 
@@ -251,23 +265,20 @@ public class ReactiveForwardingService implements IListenDataPacket {
         flow.setHardTimeout((short) 0);
         flow.setPriority(LB_IPSWITCH_PRIORITY++);
 
-        String policyName = "cbenchpolicy";
-        String flowName ="cbenchflow";
+        String policyName = null;
+        String flowName = "cbenchFlow-" + this.counter;
+        this.counter++;
 
         FlowEntry fEntry = new FlowEntry(policyName, flowName, flow, originatorSwitch);
 
         Status ret = this.ruleManager.installFlowEntryAsync(fEntry);
         if (ret.isSuccess()) {
+            this.entriesInstalled.add(fEntry);
             return true;
         } else {
             lbsLogger.error("Error in installing flow entry to node:{} ret:{}", originatorSwitch, ret);
         }
 
-
         return false;
-
-
     }
-
-
 }
