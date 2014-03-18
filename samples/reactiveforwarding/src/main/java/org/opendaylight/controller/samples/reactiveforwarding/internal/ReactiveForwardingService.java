@@ -31,6 +31,7 @@ import org.opendaylight.controller.sal.packet.Packet;
 import org.opendaylight.controller.sal.packet.PacketResult;
 import org.opendaylight.controller.sal.packet.RawPacket;
 import org.opendaylight.controller.sal.utils.GlobalConstants;
+import org.opendaylight.controller.sal.utils.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -255,21 +256,13 @@ public class ReactiveForwardingService implements IListenDataPacket {
 
         FlowEntry fEntry = new FlowEntry(policyName, flowName, flow, originatorSwitch);
 
-        //lbsLogger.debug("Install flow entry {} on node {}",fEntry.toString(),originatorSwitch.toString());
+        Status ret = this.ruleManager.installFlowEntryAsync(fEntry);
+        if (ret.isSuccess()) {
+            return true;
+        } else {
+            lbsLogger.error("Error in installing flow entry to node:{} ret:{}", originatorSwitch, ret);
+        }
 
-
-
-
-        //if(!this.ruleManager.checkFlowEntryConflict(fEntry)){
-            if(this.ruleManager.installFlowEntry(fEntry).isSuccess()){
-                return true;
-            }else{
-                lbsLogger.error("Error in installing flow entry to node : {}",originatorSwitch);
-            }
-
-        //}else{
-        //    lbsLogger.error("Conflicting flow entry exists : {}",fEntry.toString());
-        //}
 
         return false;
 
